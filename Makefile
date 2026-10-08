@@ -1,5 +1,5 @@
 # --- Variables ---
-DB_URL=postgres://admin:password@localhost:5432/costaBackend?sslmode=disable
+DB_URL=postgres://admin:password@localhost:5432/golpher_social?sslmode=disable
 MIGRATIONS_PATH=file://internal/db/migrations
 DB_USER=admin
 DB_NAME=costaBackend

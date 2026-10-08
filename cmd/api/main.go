@@ -45,7 +45,7 @@ func run(logger *slog.Logger) error {
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}
-	defer pool.Close() // runs after the server has shut down
+	defer pool.Close()
 	logger.Info("database connection established")
 
 	if err := db.Migrate(cfg.DatabaseConfig); err != nil {
@@ -79,7 +79,6 @@ func run(logger *slog.Logger) error {
 	}
 
 	// Restore default signal behavior: a second Ctrl+C now kills immediately.
-	stop()
 
 	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancelShutdown()

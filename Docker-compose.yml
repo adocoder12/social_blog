@@ -1,5 +1,6 @@
 services:
   api:
+    container_name: golpher-api
     build: .
     restart: unless-stopped
     ports:
@@ -15,6 +16,7 @@ services:
       - costa-network
 
   postgres:
+    container_name: golpher-api-postrgres
     image: postgres:17-alpine
     restart: unless-stopped
     environment:

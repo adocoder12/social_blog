@@ -60,7 +60,7 @@ func LoadConfig() (*Config, error) {
 		DBPort:   getEnv("DB_PORT", "5432"),
 		User:     getEnv("DB_USER", "admin"),
 		Password: getEnv("DB_PASSWORD", "password"),
-		Name:     getEnv("DB_NAME", "costaBackend"),
+		Name:     getEnv("DB_NAME", "golpher_social"),
 		SSLMODE:  getEnv("DB_SSLMODE", "disable"),
 		MaxConns: int32(maxConns),
 		MinConns: int32(minConns),
@@ -92,6 +92,8 @@ func (db *DatabaseConfig) MigrationDSN() string {
 	}
 	return u.String()
 }
+
+// helpers
 func (config *Config) Validate() error {
 	db := config.DatabaseConfig
 	if db.Host == "" {

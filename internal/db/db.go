@@ -13,7 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const migrationsPath = "file://internal/db/migrations"
+const migrationsPath = "file://internal/db/migrate/migrations"
 
 // NewPool creates a pgxpool with explicit connection limits from config.
 func NewPool(ctx context.Context, cfg config.DatabaseConfig) (*pgxpool.Pool, error) {

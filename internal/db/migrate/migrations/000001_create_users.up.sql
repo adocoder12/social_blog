@@ -1,0 +1,11 @@
+-- 000001_create_users.up.sql
+CREATE EXTENSION IF NOT EXISTS citext;
+
+CREATE TABLE IF NOT EXISTS users (
+    id         BIGSERIAL PRIMARY KEY,
+    email      CITEXT UNIQUE NOT NULL,
+    username   VARCHAR(255) UNIQUE NOT NULL,
+    password   BYTEA NOT NULL,
+    created_at TIMESTAMPTZ(0) NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ(0) NOT NULL DEFAULT NOW()
+);

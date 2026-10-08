@@ -1,11 +1,11 @@
 root = "."
-tmp_dir = "bin"
+tmp_dir = "tmp"
 
 [build]
-  cmd = "go build -o ./bin/main ./cmd/api"
-  bin = "./bin/main"
+  cmd = "go build -o ./tmp/main ./cmd/api"
+  bin = "./tmp/main"
   delay = 1000
-  exclude_dir = ["assets", "bin", "vendor", "testdata", "bin","docs","scripts"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "bin"]
   exclude_regex = ["_test.go"]
   include_ext = ["go", "tpl", "tmpl", "html","env"]
   poll = true
