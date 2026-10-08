@@ -14,6 +14,7 @@ import (
 	"github.com/adocoder12/social_blog/internal/config"
 	"github.com/adocoder12/social_blog/internal/db"
 	"github.com/adocoder12/social_blog/internal/handler"
+	"github.com/adocoder12/social_blog/internal/store"
 )
 
 func main() {
@@ -52,8 +53,10 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("run migrations: %w", err)
 	}
 	logger.Info("database migrations verified")
+	//make storage
+	storage := store.NewPostgresStorage(pool)
 
-	app := handler.NewApplication(logger)
+	app := handler.NewApplication(logger, storage)
 
 	server := &http.Server{
 		Addr:         ":" + cfg.SrvPort,

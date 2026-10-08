@@ -26,7 +26,7 @@ func (app *Application) SetupRoutes() http.Handler {
 		api.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Route menu:\n/api/v1\n/api/v1/health\n"))
 		})
-		api.Get("/health", HealthCheckHandler)
+		api.Get("/health", app.HealthCheckHandler)
 	})
 
 	return mux

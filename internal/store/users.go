@@ -1,4 +1,4 @@
-package repository
+package store
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/adocoder12/social_blog/internal/model"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -13,30 +14,20 @@ import (
 
 const pgUniqueViolation = "23505"
 
-var (
-	ErrUserExists   = errors.New("email or username already exists")
-	ErrUserNotFound = errors.New("user not found")
-)
-
-
-// helper 
 func isUniqueViolationError(err error) bool {
 	var pgErr *pgconn.PgError
 	return errors.As(err, &pgErr) && pgErr.Code == pgUniqueViolation
 }
 
-
-type UserRepository struct {
+type UsersStore struct {
 	pool *pgxpool.Pool
 }
 
-func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
-	return &UserRepository{pool: pool}
-}
+// func NewUserRepository(pool *pgxpool.Pool) *UsersStore {
+// 	return &UsersStore{pool: pool}
+// }
 
-
-
-func (r *UserRepository) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
+func (r *UsersStore) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
 	query := `INSERT INTO users (email, username, password) VALUES ($1, $2, $3) RETURNING id, created_at, updated_at`
 
 	err := r.pool.QueryRow(ctx, query, user.Email, user.Username, user.Password).
@@ -50,7 +41,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *model.User) (*mod
 	return user, nil
 }
 
-func (r *UserRepository) GetAllUsers(ctx context.Context) ([]model.User, error) {
+func (r *UsersStore) GetAllUsers(ctx context.Context) ([]model.User, error) {
 	query := `SELECT id, email, username, created_at, updated_at FROM users`
 
 	rows, err := r.pool.Query(ctx, query)
@@ -74,7 +65,7 @@ func (r *UserRepository) GetAllUsers(ctx context.Context) ([]model.User, error) 
 	return users, nil
 }
 
-func (r *UserRepository) GetUserByID(ctx context.Context, id int) (*model.User, error) {
+func (r *UsersStore) GetUserByID(ctx context.Context, id int) (*model.User, error) {
 	query := `SELECT id, email, username, created_at, updated_at FROM users WHERE id = $1`
 
 	var user model.User
@@ -88,7 +79,20 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id int) (*model.User, 
 	}
 	return &user, nil
 }
-func (r *UserRepository) UpdateUser(ctx context.Context, user *model.User) (*model.User, error) {
+func (r *UsersStore) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
+	query := `SELECT id, email, username, created_at, updated_at FROM users WHERE email = $1`
+	var user model.User
+	err := r.pool.QueryRow(ctx, query, email).Scan(&user.ID, &user.Email, &user.Username, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, fmt.Errorf("user repo - get by email: %w", err)
+	}
+	return &user, nil
+}
+
+func (r *UsersStore) UpdateUser(ctx context.Context, user *model.User) (*model.User, error) {
 	query := `
 		UPDATE users
 		SET username = $1,
@@ -111,7 +115,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *model.User) (*mod
 	return user, nil
 }
 
-func (r *UserRepository) UpdatePassword(ctx context.Context, id int, hash string) error {
+func (r *UsersStore) UpdatePassword(ctx context.Context, id int, hash string) error {
 	query := `UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2`
 
 	result, err := r.pool.Exec(ctx, query, hash, id)
@@ -124,7 +128,7 @@ func (r *UserRepository) UpdatePassword(ctx context.Context, id int, hash string
 	return nil
 }
 
-func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
+func (r *UsersStore) DeleteUser(ctx context.Context, id int) error {
 	query := `DELETE FROM users WHERE id = $1`
 
 	result, err := r.pool.Exec(ctx, query, id)
