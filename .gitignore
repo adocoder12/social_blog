@@ -12,6 +12,10 @@ bin/
 # Output of the go coverage tool
 *.out
 
+#CLAUDE
+CLAUDE.md
+ROADMAP.md
+
 # Dependency directories
 vendor/
 
@@ -19,13 +23,12 @@ vendor/
 go.work
 
 notes.txt
-Makefile
 # Logs
 *.log
 # Environment variables
 .env
 # Uploads
-./internal/uploads/
+internal/uploads/
 
-./internal/repository/
-.env
+# Air build output
+tmp/

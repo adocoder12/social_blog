@@ -5,7 +5,7 @@ MIGRATIONS_PATH=file://internal/db/migrate/migrations
 DB_URL=postgres://$(DB_USER):$(DB_PASSWORD)@localhost:5432/$(DB_NAME)?sslmode=disable
 
 # --- Commands ---
-.PHONY: build dev run lint migrate-up migrate-down db-shell docker-up docker-down help
+.PHONY: build dev run lint migrate-up migrate-down db-shell docker-up docker-down reset-docker help
 
 help:
 	@echo "Usage: make [target]"
@@ -19,6 +19,7 @@ help:
 	@echo "  db-shell      Open psql in the postgres container"
 	@echo "  docker-up     Start docker stack (detached)"
 	@echo "  docker-down   Stop docker stack"
+	@echo "  reset-docker  Wipe volumes and rebuild from zero"
 
 build:
 	go build -o bin/app ./cmd/api
@@ -46,3 +47,6 @@ docker-up:
 
 docker-down:
 	docker compose down
+
+reset-docker :
+	docker compose down -v

@@ -17,16 +17,15 @@ type ResponsePost struct {
 }
 
 type RequestPost struct {
-	Title   string    `json:"title"`
-	Content string    `json:"content"`
-	UserID  int64     `json:"user_id"`
-	Tags    *[]string `json:"tags"`
+	Title   string   `json:"title" validate:"required,max=100"`
+	Content string   `json:"content" validate:"required,max=1000"`
+	UserID  int64    `json:"user_id"`
+	Tags    []string `json:"tags"`
 }
 
 type UpdatePost struct {
-	Title   *string   `json:"title"`
-	Content *string   `json:"content"`
-	Tags    *[]string `json:"tags"`
+	Title   *string `json:"title" validate:"omitempty,max=100"`
+	Content *string `json:"content" validate:"omitempty,max=100"`
 }
 
 func (r *RequestPost) Tomodel() *model.Post {
@@ -34,7 +33,7 @@ func (r *RequestPost) Tomodel() *model.Post {
 		Title:   r.Title,
 		Content: r.Content,
 		UserID:  r.UserID,
-		Tags:    *r.Tags,
+		Tags:    r.Tags,
 	}
 }
 

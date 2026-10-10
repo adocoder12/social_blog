@@ -59,7 +59,7 @@ func (r *UsersStore) GetAllUsers(ctx context.Context) ([]model.User, error) {
 	return users, nil
 }
 
-func (r *UsersStore) GetUserByID(ctx context.Context, id int) (*model.User, error) {
+func (r *UsersStore) GetUserByID(ctx context.Context, id int64) (*model.User, error) {
 	query := `SELECT id, email, username, created_at, updated_at FROM users WHERE id = $1`
 
 	var user model.User
@@ -110,7 +110,7 @@ func (r *UsersStore) UpdateUser(ctx context.Context, user *model.User) (*model.U
 	return user, nil
 }
 
-func (r *UsersStore) UpdatePassword(ctx context.Context, id int, hash string) error {
+func (r *UsersStore) UpdatePassword(ctx context.Context, id int64, hash string) error {
 	query := `UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2`
 
 	result, err := r.pool.Exec(ctx, query, hash, id)
@@ -123,7 +123,7 @@ func (r *UsersStore) UpdatePassword(ctx context.Context, id int, hash string) er
 	return nil
 }
 
-func (r *UsersStore) DeleteUser(ctx context.Context, id int) error {
+func (r *UsersStore) DeleteUser(ctx context.Context, id int64) error {
 	query := `DELETE FROM users WHERE id = $1`
 
 	result, err := r.pool.Exec(ctx, query, id)
