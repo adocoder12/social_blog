@@ -25,7 +25,7 @@ Makefile
 # Environment variables
 .env
 # Uploads
-uploads/
+./internal/uploads/
 
-./internal/repository
+./internal/repository/
 .env

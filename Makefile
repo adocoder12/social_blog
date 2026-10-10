@@ -1,24 +1,24 @@
 # --- Variables ---
-DB_URL=postgres://admin:password@localhost:5432/golpher_social?sslmode=disable
-MIGRATIONS_PATH=file://internal/db/migrations
-DB_USER=admin
-DB_NAME=costaBackend
+-include .env
+
+MIGRATIONS_PATH=file://internal/db/migrate/migrations
+DB_URL=postgres://$(DB_USER):$(DB_PASSWORD)@localhost:5432/$(DB_NAME)?sslmode=disable
 
 # --- Commands ---
 .PHONY: build dev run lint migrate-up migrate-down db-shell docker-up docker-down help
 
 help:
-	echo "Usage: make [target]"
-	echo "Targets:"
-	echo "  build         Build the binary"
-	echo "  dev           Run the stack with live reload (Air, foreground)"
-	echo "  run           Run the built binary"
-	echo "  lint          Run golangci-lint"
-	echo "  migrate-up    Run all up migrations"
-	echo "  migrate-down  Rollback the last migration"
-	echo "  db-shell      Open psql in the postgres container"
-	echo "  docker-up     Start docker stack (detached)"
-	echo "  docker-down   Stop docker stack"
+	@echo "Usage: make [target]"
+	@echo "Targets:"
+	@echo "  build         Build the binary"
+	@echo "  dev           Run the stack with live reload (Air, foreground)"
+	@echo "  run           Run the built binary"
+	@echo "  lint          Run golangci-lint"
+	@echo "  migrate-up    Run all up migrations"
+	@echo "  migrate-down  Rollback the last migration"
+	@echo "  db-shell      Open psql in the postgres container"
+	@echo "  docker-up     Start docker stack (detached)"
+	@echo "  docker-down   Stop docker stack"
 
 build:
 	go build -o bin/app ./cmd/api
