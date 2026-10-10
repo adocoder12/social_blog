@@ -1,14 +1,16 @@
 package model
 
-import "time"
-
-type User struct{
-	ID int64
-	Username string
-	Email string
-	Password []byte
-	CreatedAt time.Time
-	UpdatedAt time.Time
-
+type password struct {
+	text *string
+	hash []byte
 }
 
+type User struct {
+	ID        int64    `json:"id"`
+	Username  string   `json:"username"`
+	Email     string   `json:"email"`
+	Password  password `json:"-"`
+	CreatedAt string   `json:"created_at"`
+	UpdatedAt string   `json:"updated_at"`
+	IsActive  bool     `json:"is_active"`
+}

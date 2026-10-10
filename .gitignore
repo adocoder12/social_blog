@@ -27,4 +27,4 @@ Makefile
 # Uploads
 uploads/
 
-./repository
+./internal/repository

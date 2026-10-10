@@ -8,24 +8,18 @@ import (
 	"github.com/adocoder12/social_blog/internal/model"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const pgUniqueViolation = "23505"
-
-func isUniqueViolationError(err error) bool {
-	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && pgErr.Code == pgUniqueViolation
-}
+var (
+	ErrUserExists   = errors.New("email or username already exists")
+	ErrUserNotFound = errors.New("user not found")
+)
 
 type UsersStore struct {
 	pool *pgxpool.Pool
 }
-
-// func NewUserRepository(pool *pgxpool.Pool) *UsersStore {
-// 	return &UsersStore{pool: pool}
-// }
 
 func (r *UsersStore) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
 	query := `INSERT INTO users (email, username, password) VALUES ($1, $2, $3) RETURNING id, created_at, updated_at`
@@ -79,6 +73,7 @@ func (r *UsersStore) GetUserByID(ctx context.Context, id int) (*model.User, erro
 	}
 	return &user, nil
 }
+
 func (r *UsersStore) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	query := `SELECT id, email, username, created_at, updated_at FROM users WHERE email = $1`
 	var user model.User

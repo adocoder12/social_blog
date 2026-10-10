@@ -2,9 +2,13 @@ package store
 
 import (
 	"errors"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
-var (
-	ErrUserExists   = errors.New("email or username already exists")
-	ErrUserNotFound = errors.New("user not found")
-)
+const pgUniqueViolation = "23505"
+
+func isUniqueViolationError(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == pgUniqueViolation
+}

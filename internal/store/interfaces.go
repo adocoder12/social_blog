@@ -15,3 +15,11 @@ type UserRepositoryInterface interface {
 	UpdatePassword(ctx context.Context, id int, hash string) error
 	DeleteUser(ctx context.Context, id int) error
 }
+
+type PostRepositoryInterface interface {
+	GetAllPosts(ctx context.Context) ([]model.Post, error)
+	GetPostByID(ctx context.Context, id int) (*model.Post, error)
+	CreatePost(ctx context.Context, user *model.Post) (*model.Post, error)
+	UpdatePost(ctx context.Context, user *model.Post) (*model.Post, error)
+	DeletePost(ctx context.Context, id int) error
+}
