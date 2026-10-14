@@ -14,8 +14,10 @@ import (
 	"github.com/adocoder12/social_blog/internal/config"
 	"github.com/adocoder12/social_blog/internal/db"
 	"github.com/adocoder12/social_blog/internal/handler"
+	"github.com/adocoder12/social_blog/internal/services"
 	"github.com/adocoder12/social_blog/internal/store"
 )
+const version = "0.0.1"
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
@@ -33,6 +35,9 @@ func run(logger *slog.Logger) error {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
+	}
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("validate config: %w", err)
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -53,10 +58,10 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("run migrations: %w", err)
 	}
 	logger.Info("database migrations verified")
-	//make storage
-	storage := store.NewPostgresStorage(pool)
 
-	app := handler.NewApplication(logger, storage)
+	storage := store.NewPostgresStorage(pool)
+	postService := services.NewPostService(storage.Posts)
+	app := handler.NewApplication(logger, postService,cfg,version)
 
 	server := &http.Server{
 		Addr:         ":" + cfg.SrvPort,
@@ -82,6 +87,7 @@ func run(logger *slog.Logger) error {
 	}
 
 	// Restore default signal behavior: a second Ctrl+C now kills immediately.
+	stop()
 
 	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancelShutdown()

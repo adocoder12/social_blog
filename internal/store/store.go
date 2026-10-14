@@ -20,8 +20,8 @@ type UserRepository interface {
 type PostRepository interface {
 	GetAllPosts(ctx context.Context) ([]model.Post, error)
 	GetPostByID(ctx context.Context, id int64) (*model.Post, error)
-	CreatePost(ctx context.Context, user *model.Post) (*model.Post, error)
-	UpdatePost(ctx context.Context, user *model.Post) (*model.Post, error)
+	CreatePost(ctx context.Context, post *model.Post) (*model.Post, error)
+	UpdatePost(ctx context.Context, post *model.Post) (*model.Post, error)
 	DeletePost(ctx context.Context, id int64) error
 }
 

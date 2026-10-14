@@ -24,7 +24,7 @@ type UsersStore struct {
 func (r *UsersStore) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
 	query := `INSERT INTO users (email, username, password) VALUES ($1, $2, $3) RETURNING id, created_at, updated_at`
 
-	err := r.pool.QueryRow(ctx, query, user.Email, user.Username, user.Password).
+	err := r.pool.QueryRow(ctx, query, user.Email, user.Username, user.Password.Hash).
 		Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		if isUniqueViolationError(err) {
