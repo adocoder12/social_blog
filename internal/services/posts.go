@@ -25,3 +25,11 @@ func (s *PostService) GetAllPosts(ctx context.Context) ([]model.Post, error) {
 	}
 	return posts, nil
 }
+
+func (s *PostService) CreatePost(ctx context.Context, post *model.Post) (*model.Post, error) {
+	created, err := s.repo.CreatePost(ctx, post)
+	if err != nil {
+		return nil, fmt.Errorf("post service: create post: %w", err)
+	}
+	return created, nil
+}

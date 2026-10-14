@@ -11,24 +11,23 @@ import (
 func (app *Application) SetupRoutes() http.Handler {
 	mux := chi.NewRouter()
 
-	// A good base middleware stack
 	mux.Use(middleware.RequestID)
-	mux.Use(middleware.ClientIPFromRemoteAddr) // pick one ClientIPFrom* based on your infra, see below
+	mux.Use(middleware.ClientIPFromRemoteAddr)
 	mux.Use(middleware.Logger)
 	mux.Use(middleware.Recoverer)
+	mux.Use(middleware.Timeout(8 * time.Second))
 
-	// Set a timeout value on the request context (ctx), that will signal
-	// through ctx.Done() that the request has timed out and further
-	// processing should be stopped.
-	mux.Use(middleware.Timeout(60 * time.Second))
+	// JSON errors instead of chi's plain-text defaults
+	mux.NotFound(app.notFound)
+	mux.MethodNotAllowed(app.methodNotAllowed)
 
 	mux.Route("/api/v1", func(api chi.Router) {
-		api.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("Route menu:\n/api/v1\n/api/v1/health\n"))
-		})
-
-		api.Get("/movies", app.GetAllPostsHandler)
 		api.Get("/health", app.HealthCheckHandler)
+
+		api.Route("/posts", func(posts chi.Router) {
+			posts.Get("/", app.GetAllPostsHandler)
+			posts.Post("/", app.CreatePostHandler)
+		})
 	})
 
 	return mux

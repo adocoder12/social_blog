@@ -19,6 +19,7 @@ type ResponsePost struct {
 type RequestPost struct {
 	Title   string   `json:"title" validate:"required,max=100"`
 	Content string   `json:"content" validate:"required,max=1000"`
+	UserID  int64    `json:"user_id"`
 	Tags    []string `json:"tags"`
 }
 
@@ -31,6 +32,7 @@ func (r *RequestPost) Tomodel() *model.Post {
 	return &model.Post{
 		Title:   r.Title,
 		Content: r.Content,
+		UserID:  r.UserID,
 		Tags:    r.Tags,
 	}
 }

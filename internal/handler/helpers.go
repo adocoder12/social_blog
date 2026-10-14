@@ -23,13 +23,12 @@ func (app *Application) writeJSON(w http.ResponseWriter, status int, data any) e
 	return nil
 }
 
-
 func (app *Application) readJSON(w http.ResponseWriter, r *http.Request, data any) error {
 	const maxBytes = 1_048_576 // 1 MB
 	r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
 
 	dec := json.NewDecoder(r.Body)
-	// rejects fields your struct doesn’t have, such as typos from the client.
+	// Rejects fields the struct doesn't have, such as typos from the client.
 	dec.DisallowUnknownFields()
 
 	if err := dec.Decode(data); err != nil {
@@ -42,10 +41,11 @@ func (app *Application) readJSON(w http.ResponseWriter, r *http.Request, data an
 
 	return nil
 }
+
 // errorResponse sends {"error": msg} with the given status.
 func (app *Application) errorResponse(w http.ResponseWriter, r *http.Request, status int, msg string) {
 	if err := app.writeJSON(w, status, map[string]string{"error": msg}); err != nil {
-		app.logger.Error("write error response",
+		app.logger.Error("writte error response",
 			"err", err,
 			"method", r.Method,
 			"uri", r.URL.RequestURI(),
@@ -70,7 +70,12 @@ func (app *Application) notFound(w http.ResponseWriter, r *http.Request) {
 		"method", r.Method,
 		"uri", r.URL.RequestURI(),
 	)
-	app.errorResponse(w, r, http.StatusNotFound, "resource not found")
+	app.errorResponse(w, r, http.StatusNotFound, "not found")
+}
+
+// methodNotAllowed sends a 405.
+func (app *Application) methodNotAllowed(w http.ResponseWriter, r *http.Request) {
+	app.errorResponse(w, r, http.StatusMethodNotAllowed, "method not allowed")
 }
 
 // badRequest logs the problem and sends a 400 with the error message.
