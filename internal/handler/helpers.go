@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 )
 
 func (app *Application) writeJSON(w http.ResponseWriter, status int, data any) error {
@@ -42,10 +46,20 @@ func (app *Application) readJSON(w http.ResponseWriter, r *http.Request, data an
 	return nil
 }
 
+// readIDParam parses a positive int64 ID from the URL path.
+func (app *Application) readIDParam(r *http.Request, paramName string) (int64, error) {
+	strID := chi.URLParam(r, paramName)
+	id, err := strconv.ParseInt(strID, 10, 64)
+	if err != nil || id < 1 {
+		return 0, fmt.Errorf("invalid %s: %q", paramName, strID)
+	}
+	return id, nil
+}
+
 // errorResponse sends {"error": msg} with the given status.
 func (app *Application) errorResponse(w http.ResponseWriter, r *http.Request, status int, msg string) {
 	if err := app.writeJSON(w, status, map[string]string{"error": msg}); err != nil {
-		app.logger.Error("writte error response",
+		app.logger.Error("write error response",
 			"err", err,
 			"method", r.Method,
 			"uri", r.URL.RequestURI(),
@@ -88,4 +102,26 @@ func (app *Application) badRequest(w http.ResponseWriter, r *http.Request, msg s
 		"uri", r.URL.RequestURI(),
 	)
 	app.errorResponse(w, r, http.StatusBadRequest, msg)
+}
+
+// failedValidation sends a 422 with {"errors": {"field": "rule"}}.
+func (app *Application) failedValidation(w http.ResponseWriter, r *http.Request, err error) {
+	var ve validator.ValidationErrors
+	if !errors.As(err, &ve) {
+		app.badRequest(w, r, "invalid request body", err)
+		return
+	}
+
+	fields := make(map[string]string, len(ve))
+	for _, fe := range ve {
+		if fe.Param() != "" {
+			fields[fe.Field()] = fe.Tag() + "=" + fe.Param()
+		} else {
+			fields[fe.Field()] = fe.Tag()
+		}
+	}
+
+	if err := app.writeJSON(w, http.StatusUnprocessableEntity, map[string]any{"errors": fields}); err != nil {
+		app.serverError(w, r, err)
+	}
 }

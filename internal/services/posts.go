@@ -33,3 +33,43 @@ func (s *PostService) CreatePost(ctx context.Context, post *model.Post) (*model.
 	}
 	return created, nil
 }
+
+func (s *PostService) GetPostByID(ctx context.Context, id int64) (*model.Post, error){
+	post,err:= s.repo.GetPostByID(ctx,id)
+	if err != nil{
+		return  nil, fmt.Errorf("post service: get by id: %w",err)
+	}
+	return post , nil
+}
+
+
+ 
+func (s *PostService) UpdatePost(ctx context.Context, id int64, patch model.PostPatch) (*model.Post, error) {
+	post, err := s.repo.GetPostByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("post service: update post: %w", err)
+	}
+
+	if patch.Title != nil {
+		post.Title = *patch.Title
+	}
+	if patch.Content != nil {
+		post.Content = *patch.Content
+	}
+	if patch.Tags != nil {
+		post.Tags = *patch.Tags
+	}
+
+	updated, err := s.repo.UpdatePost(ctx, post)
+	if err != nil {
+		return nil, fmt.Errorf("post service: update post: %w", err)
+	}
+	return updated, nil
+}
+	
+func (s *PostService)DeletePost(ctx context.Context, id int64) error{
+	if err:= s.repo.DeletePost(ctx,id);err != nil{
+		return  fmt.Errorf("post service: delete post: %w",err)
+	}
+	return nil
+}

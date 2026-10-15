@@ -19,21 +19,30 @@ type ResponsePost struct {
 type RequestPost struct {
 	Title   string   `json:"title" validate:"required,max=100"`
 	Content string   `json:"content" validate:"required,max=1000"`
-	UserID  int64    `json:"user_id"`
-	Tags    []string `json:"tags"`
+	UserID  int64    `json:"user_id" validate:"required,gt=0"`
+	Tags    []string `json:"tags" validate:"omitempty,max=10,dive,required,max=30"`
 }
 
 type UpdatePost struct {
-	Title   *string `json:"title" validate:"omitempty,max=100"`
-	Content *string `json:"content" validate:"omitempty,max=1000"`
+	Title   *string   `json:"title" validate:"omitempty,min=1,max=100"`
+	Content *string   `json:"content" validate:"omitempty,min=1,max=1000"`
+	Tags    *[]string `json:"tags" validate:"omitempty,max=10,dive,required,max=30"`
 }
 
-func (r *RequestPost) Tomodel() *model.Post {
+func (r *RequestPost) ToModel() *model.Post {
 	return &model.Post{
 		Title:   r.Title,
 		Content: r.Content,
 		UserID:  r.UserID,
 		Tags:    r.Tags,
+	}
+}
+
+func (u *UpdatePost) ToPatch() model.PostPatch {
+	return model.PostPatch{
+		Title:   u.Title,
+		Content: u.Content,
+		Tags:    u.Tags,
 	}
 }
 
