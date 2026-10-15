@@ -10,11 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var (
-	ErrPostNotFound = errors.New("post not found")
-)
-
-
+var ErrPostNotFound = errors.New("post not found")
 
 type PostStore struct {
 	pool *pgxpool.Pool
@@ -82,7 +78,7 @@ func (s *PostStore) CreatePost(ctx context.Context, post *model.Post) (*model.Po
 	err := s.pool.QueryRow(ctx, query, post.Title, post.Content, post.UserID, post.Tags).
 		Scan(&post.ID, &post.CreatedAt, &post.UpdatedAt)
 	if err != nil {
-		if isForeignKeyViolationError(err) {
+		if _, ok := isForeignKeyViolation(err); ok {
 			return nil, ErrUserNotFound
 		}
 		return nil, fmt.Errorf("post repo - create post query: %w", err)

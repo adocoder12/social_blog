@@ -70,6 +70,8 @@ func (app *Application) GetPostByIDHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+
+
 	if err := app.writeJSON(w, http.StatusOK, dto.FromModel(post)); err != nil {
 		app.serverError(w, r, err)
 	}

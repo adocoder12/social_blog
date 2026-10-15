@@ -11,15 +11,24 @@ import (
 )
 
 type Application struct {
-	logger *slog.Logger
-	posts  *services.PostService
-	config  *config.Config
+	logger    *slog.Logger
+	config    *config.Config
 	validator *validator.Validate
-	version string
+	version   string
+
+	posts    *services.PostService
+
 }
 
-func NewApplication(logger *slog.Logger, posts *services.PostService ,cfg *config.Config, version string) *Application {
+func NewApplication(
+	logger *slog.Logger,
+	cfg *config.Config,
+	version string,
+	posts *services.PostService,
+) *Application {
 	v := validator.New(validator.WithRequiredStructEnabled())
+
+	// Report errors using json tag names (user_id) instead of Go field names (UserID).
 	v.RegisterTagNameFunc(func(f reflect.StructField) string {
 		name := strings.SplitN(f.Tag.Get("json"), ",", 2)[0]
 		if name == "-" {
@@ -27,11 +36,12 @@ func NewApplication(logger *slog.Logger, posts *services.PostService ,cfg *confi
 		}
 		return name
 	})
+
 	return &Application{
 		logger:    logger,
-		posts:     posts,
 		config:    cfg,
 		validator: v,
 		version:   version,
+		posts:     posts,
 	}
 }

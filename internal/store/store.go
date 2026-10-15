@@ -13,7 +13,7 @@ type UserRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 	CreateUser(ctx context.Context, user *model.User) (*model.User, error)
 	UpdateUser(ctx context.Context, user *model.User) (*model.User, error)
-	UpdatePassword(ctx context.Context, id int64, hash string) error
+	UpdatePassword(ctx context.Context, id int64, hash []byte) error
 	DeleteUser(ctx context.Context, id int64) error
 }
 
@@ -25,14 +25,21 @@ type PostRepository interface {
 	DeletePost(ctx context.Context, id int64) error
 }
 
+type CommentRepository interface {
+	GetByPostID(ctx context.Context, id int64) ([]model.Comment, error)
+	Create(ctx context.Context, comment *model.Comment) error 
+}
+
 type Storage struct {
 	Users UserRepository
 	Posts PostRepository
+	Comments CommentRepository
 }
 
 func NewPostgresStorage(pool *pgxpool.Pool) Storage {
 	return Storage{
 		Users: &UsersStore{pool: pool},
 		Posts: &PostStore{pool: pool},
+		Comments: &CommentStore{pool: pool},
 	}
 }

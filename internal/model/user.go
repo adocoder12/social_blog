@@ -1,34 +1,44 @@
 package model
 
 import (
+	"errors"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-type password struct {
-	text *string
+type Password struct {
 	Hash []byte
 }
 
 type User struct {
-	ID        int64     `json:"id"`
-	Username  string    `json:"username"`
-	Email     string    `json:"email"`
-	Password  password  `json:"-"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	IsActive  bool      `json:"is_active"`
+	ID        int64
+	Username  string
+	Email     string
+	Password  Password
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	IsActive  bool
 }
 
-func (p *password) Set(text string) error {
+// Set hashes the plain-text password.
+func (p *Password) Set(text string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
-
-	p.text = &text
 	p.Hash = hash
-
 	return nil
+}
+
+// Matches reports whether text matches the stored hash.
+func (p *Password) Matches(text string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword(p.Hash, []byte(text))
+	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }

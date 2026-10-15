@@ -7,13 +7,14 @@ import (
 )
 
 type ResponsePost struct {
-	ID        int64     `json:"id"`
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
-	UserID    int64     `json:"user_id"`
-	Tags      []string  `json:"tags"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int64             `json:"id"`
+	Title     string            `json:"title"`
+	Content   string            `json:"content"`
+	UserID    int64             `json:"user_id"`
+	Tags      []string          `json:"tags"`
+	Comments  []ResponseComment `json:"comments"`
+	CreatedAt time.Time         `json:"created_at"`
+	UpdatedAt time.Time         `json:"updated_at"`
 }
 
 type RequestPost struct {
@@ -47,12 +48,17 @@ func (u *UpdatePost) ToPatch() model.PostPatch {
 }
 
 func FromModel(p *model.Post) ResponsePost {
+	comments := make([]ResponseComment, 0, len(p.Comments))
+	for i := range p.Comments {
+		comments = append(comments, CommentFromModel(&p.Comments[i]))
+	}
 	response := ResponsePost{
 		ID:        p.ID,
 		Title:     p.Title,
 		Content:   p.Content,
 		UserID:    p.UserID,
 		Tags:      p.Tags,
+		Comments:  comments,
 		CreatedAt: p.CreatedAt,
 		UpdatedAt: p.UpdatedAt,
 	}
