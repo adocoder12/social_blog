@@ -27,9 +27,11 @@ func (app *Application) SetupRoutes() http.Handler {
 		api.Route("/posts", func(posts chi.Router) {
 			posts.Get("/", app.GetAllPostsHandler)
 			posts.Post("/", app.CreatePostHandler)
-			posts.Get("/{postID}", app.GetPostByIDHandler)
-			posts.Patch("/{postID}", app.UpdatePostHandler)
-			posts.Delete("/{postID}", app.DeletePostHandler)
+			posts.Route("/{postID}", func(post chi.Router) {
+				post.Get("/", app.GetPostByIDHandler)
+				post.Patch("/", app.UpdatePostHandler)
+				post.Delete("/", app.DeletePostHandler)
+			})
 		})
 	})
 
