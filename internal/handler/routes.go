@@ -28,6 +28,7 @@ func (app *Application) SetupRoutes() http.Handler {
 			posts.Get("/", app.GetAllPostsHandler)
 			posts.Post("/", app.CreatePostHandler)
 			posts.Route("/{postID}", func(post chi.Router) {
+				post.Use(app.PostContextMiddleware)
 				post.Get("/", app.GetPostByIDHandler)
 				post.Patch("/", app.UpdatePostHandler)
 				post.Delete("/", app.DeletePostHandler)

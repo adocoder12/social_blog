@@ -41,20 +41,18 @@ func (s *PostService) GetPostByID(ctx context.Context, id int64) (*model.Post, e
 	if err != nil {
 		return nil, fmt.Errorf("post service: get by id: %w", err)
 	}
-	comments, err := s.comments.GetByPostID(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("post service: get comments: %w", err)
-	}
-	post.Comments = comments
 	return post, nil
 }
 
-func (s *PostService) UpdatePost(ctx context.Context, id int64, patch model.PostPatch) (*model.Post, error) {
-	post, err := s.posts.GetPostByID(ctx, id)
+func (s *PostService) GetComments(ctx context.Context, postID int64) ([]model.Comment, error) {
+	comments, err := s.comments.GetByPostID(ctx, postID)
 	if err != nil {
-		return nil, fmt.Errorf("post service: update post: %w", err)
+		return nil, fmt.Errorf("post service: get comments: %w", err)
 	}
+	return comments, nil
+}
 
+func (s *PostService) UpdatePost(ctx context.Context, post *model.Post, patch model.PostPatch) (*model.Post, error) {
 	if patch.Title != nil {
 		post.Title = *patch.Title
 	}

@@ -116,7 +116,7 @@ func (s *UsersStore) GetUserByEmail(ctx context.Context, email string) (*model.U
 	return &user, nil
 }
 
-func (s *UsersStore) UpdateUser(ctx context.Context, user *model.User) (*model.User, error){
+func (s *UsersStore) UpdateUser(ctx context.Context, user *model.User) (*model.User, error) {
 	query := `
 		UPDATE users
 		SET username = $1, email = $2, updated_at = NOW()

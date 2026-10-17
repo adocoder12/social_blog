@@ -27,19 +27,19 @@ type PostRepository interface {
 
 type CommentRepository interface {
 	GetByPostID(ctx context.Context, id int64) ([]model.Comment, error)
-	Create(ctx context.Context, comment *model.Comment) error 
+	Create(ctx context.Context, comment *model.Comment) error
 }
 
 type Storage struct {
-	Users UserRepository
-	Posts PostRepository
+	Users    UserRepository
+	Posts    PostRepository
 	Comments CommentRepository
 }
 
 func NewPostgresStorage(pool *pgxpool.Pool) Storage {
 	return Storage{
-		Users: &UsersStore{pool: pool},
-		Posts: &PostStore{pool: pool},
+		Users:    &UsersStore{pool: pool},
+		Posts:    &PostStore{pool: pool},
 		Comments: &CommentStore{pool: pool},
 	}
 }

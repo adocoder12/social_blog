@@ -16,8 +16,7 @@ type Application struct {
 	validator *validator.Validate
 	version   string
 
-	posts    *services.PostService
-
+	posts *services.PostService
 }
 
 func NewApplication(

@@ -70,7 +70,7 @@ func LoadConfig() (*Config, error) {
 		UploadProvider: getEnv("UPLOAD_PROVIDER", "local"),
 		//Cors
 		AllowedOrigin: getEnv("ALLOWED_ORIGIN", "http://localhost:3000"),
-		AppEnv : getEnv("APP_ENV","development"),
+		AppEnv:        getEnv("APP_ENV", "development"),
 	}
 
 	return config, nil
