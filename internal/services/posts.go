@@ -28,20 +28,20 @@ func (s *PostService) GetAllPosts(ctx context.Context) ([]model.Post, error) {
 	return posts, nil
 }
 
-func (s *PostService) CreatePost(ctx context.Context, post *model.Post) (*model.Post, error) {
-	created, err := s.posts.CreatePost(ctx, post)
-	if err != nil {
-		return nil, fmt.Errorf("post service: create post: %w", err)
-	}
-	return created, nil
-}
-
 func (s *PostService) GetPostByID(ctx context.Context, id int64) (*model.Post, error) {
 	post, err := s.posts.GetPostByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("post service: get by id: %w", err)
 	}
 	return post, nil
+}
+
+func (s *PostService) CreatePost(ctx context.Context, post *model.Post) (*model.Post, error) {
+	created, err := s.posts.CreatePost(ctx, post)
+	if err != nil {
+		return nil, fmt.Errorf("post service: create post: %w", err)
+	}
+	return created, nil
 }
 
 func (s *PostService) GetComments(ctx context.Context, postID int64) ([]model.Comment, error) {

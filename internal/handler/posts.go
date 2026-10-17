@@ -27,9 +27,7 @@ func (app *Application) GetAllPostsHandler(w http.ResponseWriter, r *http.Reques
 		response = append(response, dto.FromModel(&posts[i]))
 	}
 
-	if err := app.writeJSON(w, http.StatusOK, response); err != nil {
-		app.serverError(w, r, err)
-	}
+	app.jsonResponse(w,r,http.StatusOK,response)
 }
 
 func (app *Application) CreatePostHandler(w http.ResponseWriter, r *http.Request) {
@@ -54,9 +52,7 @@ func (app *Application) CreatePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := app.writeJSON(w, http.StatusCreated, dto.FromModel(post)); err != nil {
-		app.serverError(w, r, err)
-	}
+	app.jsonResponse(w,r,http.StatusOK,dto.FromModel(post))
 }
 
 func (app *Application) GetPostByIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -69,9 +65,8 @@ func (app *Application) GetPostByIDHandler(w http.ResponseWriter, r *http.Reques
 	}
 	post.Comments = comments
 
-	if err := app.writeJSON(w, http.StatusOK, dto.FromModel(post)); err != nil {
-		app.serverError(w, r, err)
-	}
+	app.jsonResponse(w,r,http.StatusOK,dto.FromModel(post))
+
 }
 
 func (app *Application) PostContextMiddleware(next http.Handler) http.Handler {
@@ -123,9 +118,8 @@ func (app *Application) UpdatePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := app.writeJSON(w, http.StatusOK, dto.FromModel(updated)); err != nil {
-		app.serverError(w, r, err)
-	}
+	app.jsonResponse(w,r,http.StatusOK,dto.FromModel(updated))
+
 }
 
 func (app *Application) DeletePostHandler(w http.ResponseWriter, r *http.Request) {

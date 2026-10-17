@@ -46,6 +46,20 @@ func (app *Application) readJSON(w http.ResponseWriter, r *http.Request, data an
 	return nil
 }
 
+// envelope is the top-level shape of every JSON response.
+type envelope struct {
+	Data   any               `json:"data,omitempty"`
+	Error  string            `json:"error,omitempty"`
+	Errors map[string]string `json:"errors,omitempty"`
+}
+
+// jsonResponse sends {"data": data} with the given status.
+func (app *Application) jsonResponse(w http.ResponseWriter, r *http.Request, status int, data any) {
+	if err := app.writeJSON(w, status, envelope{Data: data}); err != nil {
+		app.serverError(w, r, err)
+	}
+}
+
 // readIDParam parses a positive int64 ID from the URL path.
 func (app *Application) readIDParam(r *http.Request, paramName string) (int64, error) {
 	strID := chi.URLParam(r, paramName)
@@ -58,7 +72,7 @@ func (app *Application) readIDParam(r *http.Request, paramName string) (int64, e
 
 // errorResponse sends {"error": msg} with the given status.
 func (app *Application) errorResponse(w http.ResponseWriter, r *http.Request, status int, msg string) {
-	if err := app.writeJSON(w, status, map[string]string{"error": msg}); err != nil {
+	if err := app.writeJSON(w, status, envelope{Error: msg}); err != nil {
 		app.logger.Error("write error response",
 			"err", err,
 			"method", r.Method,
@@ -115,13 +129,15 @@ func (app *Application) failedValidation(w http.ResponseWriter, r *http.Request,
 	fields := make(map[string]string, len(ve))
 	for _, fe := range ve {
 		if fe.Param() != "" {
+			//field =maxCh=100
 			fields[fe.Field()] = fe.Tag() + "=" + fe.Param()
 		} else {
+			//field =required
 			fields[fe.Field()] = fe.Tag()
 		}
 	}
 
-	if err := app.writeJSON(w, http.StatusUnprocessableEntity, map[string]any{"errors": fields}); err != nil {
+	if err := app.writeJSON(w, http.StatusUnprocessableEntity, envelope{Errors: fields}); err != nil {
 		app.serverError(w, r, err)
 	}
 }
