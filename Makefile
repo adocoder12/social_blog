@@ -6,7 +6,7 @@ MIGRATIONS_PATH=file://$(MIGRATIONS_DIR)
 DB_URL=postgres://$(DB_USER):$(DB_PASSWORD)@localhost:5432/$(DB_NAME)?sslmode=disable
 
 # --- Commands ---
-.PHONY: build dev run lint migrate-create migrate-up migrate-down db-shell docker-up docker-down reset-docker help
+.PHONY: build dev run lint seed migrate-create migrate-up migrate-down db-shell docker-up docker-down reset-docker help
 
 help:
 	@echo "Usage: make [target]"
@@ -15,6 +15,7 @@ help:
 	@echo "  dev                   Run the stack with live reload (Air, foreground)"
 	@echo "  run                   Run the built binary"
 	@echo "  lint                  Run golangci-lint"
+	@echo "  seed                  Go run the seed script"
 	@echo "  migrate-create name=x Create a new up/down migration pair"
 	@echo "  migrate-up            Run all up migrations"
 	@echo "  migrate-down          Rollback the last migration"
@@ -34,6 +35,9 @@ run:
 
 lint:
 	golangci-lint run ./...
+
+seed:
+	DB_HOST=localhost go run ./cmd/api/seed
 
 migrate-create:
 	@if [ -z "$(name)" ]; then echo "Usage: make migrate-create name=<name>"; exit 1; fi

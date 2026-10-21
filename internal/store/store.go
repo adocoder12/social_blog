@@ -4,8 +4,15 @@ import (
 	"context"
 
 	"github.com/adocoder12/social_blog/internal/model"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
+
+type DBTX interface {
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
 
 type UserRepository interface {
 	GetAllUsers(ctx context.Context) ([]model.User, error)
@@ -36,10 +43,10 @@ type Storage struct {
 	Comments CommentRepository
 }
 
-func NewPostgresStorage(pool *pgxpool.Pool) Storage {
+func NewPostgresStorage(pool DBTX) Storage {
 	return Storage{
-		Users:    &UsersStore{pool: pool},
-		Posts:    &PostStore{pool: pool},
-		Comments: &CommentStore{pool: pool},
+		Users:    &UsersStore{db: pool},
+		Posts:    &PostStore{db: pool},
+		Comments: &CommentStore{db: pool},
 	}
 }

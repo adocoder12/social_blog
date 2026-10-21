@@ -2,6 +2,7 @@ package store
 
 import (
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -10,6 +11,7 @@ import (
 const (
 	pgUniqueViolation     = "23505"
 	pgForeignKeyViolation = "23503"
+	QueryTimeoutDuration = time.Second * 5
 )
 
 // isUniqueViolation reports whether err is a unique constraint violation,

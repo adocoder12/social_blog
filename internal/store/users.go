@@ -7,7 +7,6 @@ import (
 
 	"github.com/adocoder12/social_blog/internal/model"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
@@ -18,11 +17,11 @@ var (
 )
 
 type UsersStore struct {
-	pool *pgxpool.Pool
+	db DBTX
 }
 
-func NewUsersStore(pool *pgxpool.Pool) *UsersStore {
-	return &UsersStore{pool: pool}
+func NewUsersStore(db DBTX) *UsersStore {
+	return &UsersStore{db: db}
 }
 
 // userUniqueError maps a unique violation on users to a specific sentinel error.
@@ -42,7 +41,10 @@ func (s *UsersStore) CreateUser(ctx context.Context, user *model.User) (*model.U
 		VALUES ($1, $2, $3)
 		RETURNING id, created_at, updated_at`
 
-	err := s.pool.QueryRow(ctx, query, user.Email, user.Username, user.Password.Hash).
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRow(ctx, query, user.Email, user.Username, user.Password.Hash).
 		Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		if constraint, ok := isUniqueViolation(err); ok {
@@ -58,8 +60,11 @@ func (s *UsersStore) GetAllUsers(ctx context.Context) ([]model.User, error) {
 		SELECT id, email, username, created_at, updated_at
 		FROM users
 		ORDER BY created_at DESC`
+	
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
 
-	rows, err := s.pool.Query(ctx, query)
+	rows, err := s.db.Query(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("user repo - get all query: %w", err)
 	}
@@ -86,8 +91,11 @@ func (s *UsersStore) GetUserByID(ctx context.Context, id int64) (*model.User, er
 		FROM users
 		WHERE id = $1`
 
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
 	var user model.User
-	err := s.pool.QueryRow(ctx, query, id).
+	err := s.db.QueryRow(ctx, query, id).
 		Scan(&user.ID, &user.Email, &user.Username, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -104,8 +112,11 @@ func (s *UsersStore) GetUserByEmail(ctx context.Context, email string) (*model.U
 		FROM users
 		WHERE email = $1`
 
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
 	var user model.User
-	err := s.pool.QueryRow(ctx, query, email).
+	err := s.db.QueryRow(ctx, query, email).
 		Scan(&user.ID, &user.Email, &user.Username, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -123,7 +134,10 @@ func (s *UsersStore) UpdateUser(ctx context.Context, user *model.User) (*model.U
 		WHERE id = $3
 		RETURNING updated_at`
 
-	err := s.pool.QueryRow(ctx, query, user.Username, user.Email, user.ID).
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRow(ctx, query, user.Username, user.Email, user.ID).
 		Scan(&user.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -140,7 +154,10 @@ func (s *UsersStore) UpdateUser(ctx context.Context, user *model.User) (*model.U
 func (s *UsersStore) UpdatePassword(ctx context.Context, id int64, hash []byte) error {
 	query := `UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2`
 
-	result, err := s.pool.Exec(ctx, query, hash, id)
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+	
+	result, err := s.db.Exec(ctx, query, hash, id)
 	if err != nil {
 		return fmt.Errorf("user repo - update password: %w", err)
 	}
@@ -153,7 +170,10 @@ func (s *UsersStore) UpdatePassword(ctx context.Context, id int64, hash []byte) 
 func (s *UsersStore) DeleteUser(ctx context.Context, id int64) error {
 	query := `DELETE FROM users WHERE id = $1`
 
-	result, err := s.pool.Exec(ctx, query, id)
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	result, err := s.db.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("user repo - delete: %w", err)
 	}

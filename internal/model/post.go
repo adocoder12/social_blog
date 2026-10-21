@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type Post struct {
 	ID        int64
@@ -9,6 +11,7 @@ type Post struct {
 	UserID    int64
 	Tags      []string
 	Comments  []Comment
+	Version int
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

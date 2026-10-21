@@ -13,6 +13,7 @@ type ResponsePost struct {
 	UserID    int64             `json:"user_id"`
 	Tags      []string          `json:"tags"`
 	Comments  []ResponseComment `json:"comments"`
+	Version   int				`json:"version"`
 	CreatedAt time.Time         `json:"created_at"`
 	UpdatedAt time.Time         `json:"updated_at"`
 }

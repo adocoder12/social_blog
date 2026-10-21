@@ -5,15 +5,14 @@ import (
 	"fmt"
 
 	"github.com/adocoder12/social_blog/internal/model"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type CommentStore struct {
-	pool *pgxpool.Pool
+	db DBTX
 }
 
-func NewCommentStore(pool *pgxpool.Pool) *CommentStore {
-	return &CommentStore{pool: pool}
+func NewCommentStore(db DBTX) *CommentStore {
+	return &CommentStore{db: db}
 }
 
 func (s *CommentStore) GetByPostID(ctx context.Context, postID int64) ([]model.Comment, error) {
@@ -24,7 +23,10 @@ func (s *CommentStore) GetByPostID(ctx context.Context, postID int64) ([]model.C
 		WHERE c.post_id = $1
 		ORDER BY c.created_at DESC`
 
-	rows, err := s.pool.Query(ctx, query, postID)
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	rows, err := s.db.Query(ctx, query, postID)
 	if err != nil {
 		return nil, fmt.Errorf("comment repo - get by post id query: %w", err)
 	}
@@ -52,7 +54,10 @@ func (s *CommentStore) Create(ctx context.Context, comment *model.Comment) error
 		VALUES ($1, $2, $3)
 		RETURNING id, created_at`
 
-	err := s.pool.QueryRow(ctx, query, comment.PostID, comment.UserID, comment.Content).
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+	
+	err := s.db.QueryRow(ctx, query, comment.PostID, comment.UserID, comment.Content).
 		Scan(&comment.ID, &comment.CreatedAt)
 	if err != nil {
 		if constraint, ok := isForeignKeyViolation(err); ok {
