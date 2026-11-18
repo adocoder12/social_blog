@@ -24,7 +24,7 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}))
-	slog.SetDefault(logger)
+	// slog.SetDefault(logger)
 
 	if err := run(logger); err != nil {
 		logger.Error("fatal", "error", err)
@@ -40,6 +40,8 @@ func run(logger *slog.Logger) error {
 	if err := cfg.Validate(); err != nil {
 		return fmt.Errorf("validate config: %w", err)
 	}
+	logger = logger.With("env", cfg.AppEnv)
+	slog.SetDefault(logger)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -62,12 +64,14 @@ func run(logger *slog.Logger) error {
 
 	storage := store.NewPostgresStorage(pool)
 	postService := services.NewPostService(storage.Posts, storage.Comments)
+	userService := services.NewUserService(storage.Users, storage.Follower)
 
 	app := handler.NewApplication(
 		logger,
 		cfg,
 		version,
 		postService,
+		userService,
 	)
 
 	server := &http.Server{

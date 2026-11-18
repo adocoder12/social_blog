@@ -118,6 +118,11 @@ func (app *Application) badRequest(w http.ResponseWriter, r *http.Request, msg s
 	app.errorResponse(w, r, http.StatusBadRequest, msg)
 }
 
+// conflict sends a 409 when the request clashes with existing data.
+func (app *Application) conflict(w http.ResponseWriter, r *http.Request, msg string) {
+	app.errorResponse(w, r, http.StatusConflict, msg)
+}
+
 // failedValidation sends a 422 with {"errors": {"field": "rule"}}.
 func (app *Application) failedValidation(w http.ResponseWriter, r *http.Request, err error) {
 	var ve validator.ValidationErrors

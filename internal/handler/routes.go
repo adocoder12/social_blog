@@ -34,6 +34,19 @@ func (app *Application) SetupRoutes() http.Handler {
 				post.Delete("/", app.DeletePostHandler)
 			})
 		})
+		api.Route("/users", func(users chi.Router) {
+			users.Post("/", app.CreateUserHandler)
+			users.Route("/{userID}", func(user chi.Router) {
+				user.Use(app.UserContextMiddleware)
+				user.Get("/", app.GetUserByIDHandler)
+				user.Patch("/", app.UpdateUserHandler)
+				user.Delete("/", app.DeleteUserHandler)
+				user.Put("/follow", app.FollowUserHandler)
+				user.Put("/unfollow", app.UnfollowUserHandler)
+				// TODO(auth): move to /users/feed behind AuthTokenMiddleware.
+				user.Get("/feed", app.GetUserFeedHandler)
+			})
+		})
 	})
 
 	return mux

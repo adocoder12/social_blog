@@ -10,7 +10,6 @@ import (
 )
 
 var (
-	ErrUserExists        = errors.New("email or username already exists")
 	ErrUserNotFound      = errors.New("user not found")
 	ErrDuplicateEmail    = errors.New("email already in use")
 	ErrDuplicateUsername = errors.New("username already taken")
@@ -20,11 +19,8 @@ type UsersStore struct {
 	db DBTX
 }
 
-func NewUsersStore(db DBTX) *UsersStore {
-	return &UsersStore{db: db}
-}
-
 // userUniqueError maps a unique violation on users to a specific sentinel error.
+// An unknown constraint means code and schema are out of sync, so it's a server error.
 func userUniqueError(constraint string) error {
 	switch constraint {
 	case "users_email_key":
@@ -32,8 +28,9 @@ func userUniqueError(constraint string) error {
 	case "users_username_key":
 		return ErrDuplicateUsername
 	}
-	return ErrUserExists
+	return fmt.Errorf("unexpected unique violation on users: %s", constraint)
 }
+
 
 func (s *UsersStore) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
 	query := `
@@ -44,7 +41,7 @@ func (s *UsersStore) CreateUser(ctx context.Context, user *model.User) (*model.U
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	err := s.db.QueryRow(ctx, query, user.Email, user.Username, user.Password.Hash).
+	err := s.db.QueryRow(ctx, query, user.Email, user.Username, user.Password.Hash()).
 		Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		if constraint, ok := isUniqueViolation(err); ok {
@@ -108,22 +105,25 @@ func (s *UsersStore) GetUserByID(ctx context.Context, id int64) (*model.User, er
 
 func (s *UsersStore) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	query := `
-		SELECT id, email, username, created_at, updated_at
+		SELECT id, email, username, password, created_at, updated_at
 		FROM users
 		WHERE email = $1`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
+	// Password hash is loaded here because this is the lookup login will use.
 	var user model.User
+	var hash []byte
 	err := s.db.QueryRow(ctx, query, email).
-		Scan(&user.ID, &user.Email, &user.Username, &user.CreatedAt, &user.UpdatedAt)
+		Scan(&user.ID, &user.Email, &user.Username, &hash, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrUserNotFound
 		}
 		return nil, fmt.Errorf("user repo - get by email: %w", err)
 	}
+	user.Password.SetHash(hash)
 	return &user, nil
 }
 

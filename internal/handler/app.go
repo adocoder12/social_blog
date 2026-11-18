@@ -17,6 +17,7 @@ type Application struct {
 	version   string
 
 	posts *services.PostService
+	users *services.UserService
 }
 
 func NewApplication(
@@ -24,6 +25,7 @@ func NewApplication(
 	cfg *config.Config,
 	version string,
 	posts *services.PostService,
+	users *services.UserService,
 ) *Application {
 	v := validator.New(validator.WithRequiredStructEnabled())
 
@@ -42,5 +44,7 @@ func NewApplication(
 		validator: v,
 		version:   version,
 		posts:     posts,
+		users : users,
+
 	}
 }

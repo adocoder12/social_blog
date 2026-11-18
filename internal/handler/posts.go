@@ -14,6 +14,8 @@ type postKey string
 
 const postCtx postKey = "post"
 
+
+
 func (app *Application) GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
 	posts, err := app.posts.GetAllPosts(r.Context())
 
@@ -31,18 +33,18 @@ func (app *Application) GetAllPostsHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *Application) CreatePostHandler(w http.ResponseWriter, r *http.Request) {
-	var req dto.RequestPost
-	if err := app.readJSON(w, r, &req); err != nil {
+	var payload dto.RequestPost
+	if err := app.readJSON(w, r, &payload); err != nil {
 		app.badRequest(w, r, "invalid request body", err)
 		return
 	}
 
-	if err := app.validator.Struct(req); err != nil {
+	if err := app.validator.Struct(payload); err != nil {
 		app.failedValidation(w, r, err)
 		return
 	}
 
-	post, err := app.posts.CreatePost(r.Context(), req.ToModel())
+	post, err := app.posts.CreatePost(r.Context(), payload.ToModel())
 	if err != nil {
 		if errors.Is(err, store.ErrUserNotFound) {
 			app.badRequest(w, r, "user does not exist", err)
@@ -52,7 +54,7 @@ func (app *Application) CreatePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.jsonResponse(w,r,http.StatusOK,dto.FromModel(post))
+	app.jsonResponse(w,r,http.StatusCreated,dto.FromModel(post))
 }
 
 func (app *Application) GetPostByIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -69,49 +71,23 @@ func (app *Application) GetPostByIDHandler(w http.ResponseWriter, r *http.Reques
 
 }
 
-func (app *Application) PostContextMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		postID, err := app.readIDParam(r, "postID")
-		if err != nil {
-			app.badRequest(w, r, "invalid post id", err)
-			return
-		}
-		post, err := app.posts.GetPostByID(r.Context(), postID)
-		if err != nil {
-			if errors.Is(err, store.ErrPostNotFound) {
-				app.notFound(w, r)
-				return
-			}
-			app.serverError(w, r, err)
-			return
-		}
-		ctx := context.WithValue(r.Context(), postCtx, post)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-func getPostFromCtx(r *http.Request) *model.Post {
-	post, _ := r.Context().Value(postCtx).(*model.Post)
-	return post
-}
-
 func (app *Application) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromCtx(r)
 
-	var req dto.UpdatePost
-	if err := app.readJSON(w, r, &req); err != nil {
+	var payload dto.UpdatePost
+	if err := app.readJSON(w, r, &payload); err != nil {
 		app.badRequest(w, r, "invalid request body", err)
 		return
 	}
-	if err := app.validator.Struct(req); err != nil {
+	if err := app.validator.Struct(payload); err != nil {
 		app.failedValidation(w, r, err)
 		return
 	}
 
-	updated, err := app.posts.UpdatePost(r.Context(), post, req.ToPatch())
+	updated, err := app.posts.UpdatePost(r.Context(), post, payload.ToPatch())
 	if err != nil {
-		if errors.Is(err, store.ErrPostNotFound) {
-			app.notFound(w, r)
+		if errors.Is(err, store.ErrEditConflict) {
+			app.conflict(w, r, "post was modified, fetch it again and retry")
 			return
 		}
 		app.serverError(w, r, err)
@@ -135,4 +111,32 @@ func (app *Application) DeletePostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+//middlewares
+func (app *Application) PostContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		postID, err := app.readIDParam(r, "postID")
+		if err != nil {
+			app.badRequest(w, r, "invalid post id", err)
+			return
+		}
+		post, err := app.posts.GetPostByID(r.Context(), postID)
+		if err != nil {
+			if errors.Is(err, store.ErrPostNotFound) {
+				app.notFound(w, r)
+				return
+			}
+			app.serverError(w, r, err)
+			return
+		}
+		ctx := context.WithValue(r.Context(), postCtx, post)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func getPostFromCtx(r *http.Request) *model.Post {
+	// Unchecked on purpose: a missing value means the middleware isn't wired,
+	// a programmer error. Recoverer turns the panic into a 500.
+	return r.Context().Value(postCtx).(*model.Post)
 }

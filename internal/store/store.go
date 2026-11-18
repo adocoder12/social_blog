@@ -25,6 +25,7 @@ type UserRepository interface {
 }
 
 type PostRepository interface {
+	GetUserFeed(ctx context.Context, userID int64, fq model.FeedQuery) ([]model.PostFeed, error)
 	GetAllPosts(ctx context.Context) ([]model.Post, error)
 	GetPostByID(ctx context.Context, id int64) (*model.Post, error)
 	CreatePost(ctx context.Context, post *model.Post) (*model.Post, error)
@@ -37,10 +38,15 @@ type CommentRepository interface {
 	Create(ctx context.Context, comment *model.Comment) error
 }
 
+type FollowRepository interface{
+	Follow(ctx context.Context, followerID, userID int64) error
+	Unfollow(ctx context.Context, followerID, userID int64) error 
+}
 type Storage struct {
 	Users    UserRepository
 	Posts    PostRepository
 	Comments CommentRepository
+	Follower FollowRepository
 }
 
 func NewPostgresStorage(pool DBTX) Storage {
@@ -48,5 +54,6 @@ func NewPostgresStorage(pool DBTX) Storage {
 		Users:    &UsersStore{db: pool},
 		Posts:    &PostStore{db: pool},
 		Comments: &CommentStore{db: pool},
+		Follower: &FollowerStore{db:pool},
 	}
 }

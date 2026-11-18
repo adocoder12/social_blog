@@ -12,6 +12,7 @@ const (
 	pgUniqueViolation     = "23505"
 	pgForeignKeyViolation = "23503"
 	QueryTimeoutDuration = time.Second * 5
+
 )
 
 // isUniqueViolation reports whether err is a unique constraint violation,
@@ -33,3 +34,4 @@ func isForeignKeyViolation(err error) (string, bool) {
 	}
 	return "", false
 }
+

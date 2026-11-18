@@ -19,7 +19,13 @@ func NewPostService(posts store.PostRepository, comments store.CommentRepository
 		comments: comments,
 	}
 }
-
+func (s *PostService) GetUserFeed(ctx context.Context, userID int64, fq model.FeedQuery) ([]model.PostFeed, error) {
+	posts, err := s.posts.GetUserFeed(ctx, userID, fq)
+	if err != nil {
+		return nil, fmt.Errorf("post service: get user feed: %w", err)
+	}
+	return posts, nil
+}
 func (s *PostService) GetAllPosts(ctx context.Context) ([]model.Post, error) {
 	posts, err := s.posts.GetAllPosts(ctx)
 	if err != nil {
@@ -62,6 +68,9 @@ func (s *PostService) UpdatePost(ctx context.Context, post *model.Post, patch mo
 	if patch.Tags != nil {
 		post.Tags = *patch.Tags
 	}
+	// Use the client's version, not the one just read from the DB,
+	// so edits made since the client fetched the post are detected.
+	post.Version = patch.Version
 
 	updated, err := s.posts.UpdatePost(ctx, post)
 	if err != nil {

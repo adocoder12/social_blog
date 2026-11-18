@@ -13,7 +13,7 @@ type ResponsePost struct {
 	UserID    int64             `json:"user_id"`
 	Tags      []string          `json:"tags"`
 	Comments  []ResponseComment `json:"comments"`
-	Version   int				`json:"version"`
+	Version   int               `json:"version"`
 	CreatedAt time.Time         `json:"created_at"`
 	UpdatedAt time.Time         `json:"updated_at"`
 }
@@ -29,6 +29,15 @@ type UpdatePost struct {
 	Title   *string   `json:"title" validate:"omitempty,min=1,max=100"`
 	Content *string   `json:"content" validate:"omitempty,min=1,max=1000"`
 	Tags    *[]string `json:"tags" validate:"omitempty,max=10,dive,required,max=30"`
+	// Version the client last read; the update is rejected if the post changed since.
+	Version int `json:"version" validate:"required,gt=0"`
+}
+
+// ResponseFeedPost is a post in a feed. Embedding flattens ResponsePost's
+type ResponseFeedPost struct {
+	ResponsePost
+	Username      string `json:"username"`
+	CommentsCount int    `json:"comments_count"`
 }
 
 func (r *RequestPost) ToModel() *model.Post {
@@ -45,6 +54,7 @@ func (u *UpdatePost) ToPatch() model.PostPatch {
 		Title:   u.Title,
 		Content: u.Content,
 		Tags:    u.Tags,
+		Version: u.Version,
 	}
 }
 
@@ -60,8 +70,17 @@ func FromModel(p *model.Post) ResponsePost {
 		UserID:    p.UserID,
 		Tags:      p.Tags,
 		Comments:  comments,
+		Version:   p.Version,
 		CreatedAt: p.CreatedAt,
 		UpdatedAt: p.UpdatedAt,
 	}
 	return response
+}
+
+func FromFeedModel(p *model.PostFeed) ResponseFeedPost {
+	return ResponseFeedPost{
+		ResponsePost:  FromModel(&p.Post),
+		Username:      p.Username,
+		CommentsCount: p.CommentsCount,
+	}
 }

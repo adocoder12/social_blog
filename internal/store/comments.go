@@ -11,10 +11,6 @@ type CommentStore struct {
 	db DBTX
 }
 
-func NewCommentStore(db DBTX) *CommentStore {
-	return &CommentStore{db: db}
-}
-
 func (s *CommentStore) GetByPostID(ctx context.Context, postID int64) ([]model.Comment, error) {
 	query := `
 		SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, u.username
